@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<title>Catalogo Vinili con Discogs API</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+  .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+  .record img { max-width: 200px; border-radius: 5px; }
+  .buy-button { background: #0070ba; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px; }
+  form { margin-top: 40px; }
+  input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Catalogo Vinili</h1>
+    <div id="vinile">
+      <h2>Caricamento dati...</h2>
+    </div>
+
+    <form action="mailto:massimomognol@gmail.com" method="post" enctype="text/plain">
+      <h3>Contattami</h3>
+      <input type="text" name="name" placeholder="Il tuo nome" required />
+      <input type="email" name="email" placeholder="La tua email" required />
+      <textarea name="message" rows="5" placeholder="Messaggio"></textarea>
+      <input type="submit" value="Invia" />
+    </form>
+  </div>
+
+<script>
+const discogsId = "r1378897"; // tuo ID disco Discogs
+const businessEmail = "massimomognol@gmail.com";
+const prezzo = 5;
+
+async function fetchDiscogsData(id) {
+  try {
+    const response = await fetch(`https://api.discogs.com/releases/${id}`);
+    if (!response.ok) throw new Error("Errore caricamento dati Discogs");
+    const data = await response.json();
+    return data;
+  } catch(e) {
+    console.error(e);
+    return null;
+  }
+}
+
+function renderVinile(data) {
+  if (!data) {
+    document.getElementById("vinile").innerHTML = "<p>Errore nel caricamento dei dati.</p>";
+    return;
+  }
+
+  // Titolo, anno, etichetta
+  const title = data.title || "Titolo non disponibile";
+  const year = data.year || "Anno non disponibile";
+  const label = data.labels && data.labels.length > 0 ? data.labels[0].name : "Etichetta non disponibile";
+
+  // Tipo di stampa (se disponibile)
+  const format = data.formats && data.formats.length > 0 ? data.formats[0].name : "Formato non disponibile";
+
+  // Copertina caricata manualmente
+  const coverImg = "img/copertina1.jpg";
+
+  const html = `
+    <h2>${title} (${year})</h2>
+    <img src="${coverImg}" alt="Copertina disco" />
+    <p><strong>Etichetta:</strong> ${label}</p>
+    <p><strong>Formato:</strong> ${format}</p>
+    <p><strong>Prezzo:</strong> €${prezzo}</p>
+    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${encodeURIComponent(businessEmail)}&currency_code=EUR&amount=${prezzo}&item_name=${encodeURIComponent(title)}" target="_blank" class="buy-button">Acquista con PayPal</a>
+  `;
+
+  document.getElementById("vinile").innerHTML = html;
+}
+
+fetchDiscogsData(discogsId).then(renderVinile);
+</script>
+
+</body>
+</html>
